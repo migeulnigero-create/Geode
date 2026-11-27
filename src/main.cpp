@@ -6,6 +6,8 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/HardStreak.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/PauseLayer.hpp>
+#include <Geode/ui/GeodeUI.hpp>
 #include "TrajectoryNode.hpp"
 
 using namespace geode::prelude;
@@ -51,7 +53,7 @@ class $modify(TrajBGL, GJBaseGameLayer)
     void customCollisionCheck(PlayerObject* player, GameObject* obj)
     {
         bool intersects;
-        if (obj->m_orientedBox && obj->m_shouldUseOuterOb)
+        if (obj->m_orientedBox && obj->m_shouldUseOuterOb && player->m_orientedBox)
             intersects = obj->m_orientedBox->overlaps(player->m_orientedBox);
         else
             intersects = player->getObjectRect().intersectsRect(obj->getObjectRect());
@@ -170,6 +172,32 @@ class $modify(TrajBGL, GJBaseGameLayer)
     void activateSongEditTrigger(SongTriggerGameObject* p0)
     {
         if (!TrajectoryNode::active()) GJBaseGameLayer::activateSongEditTrigger(p0);
+    }
+};
+
+class $modify(TrajPause, PauseLayer)
+{
+    void customSetup()
+    {
+        PauseLayer::customSetup();
+
+        auto spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+        if (!spr) spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png");
+        if (!spr) return;
+        spr->setScale(0.7f);
+
+        auto btn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(TrajPause::onTrajSettings));
+        auto menu = CCMenu::create();
+        menu->addChild(btn);
+        auto win = CCDirector::get()->getWinSize();
+        menu->setPosition({ win.width - 30.f, win.height - 30.f });
+        menu->setID("trajectory-menu"_spr);
+        this->addChild(menu, 100);
+    }
+
+    void onTrajSettings(CCObject*)
+    {
+        geode::openSettingsPopup(Mod::get());
     }
 };
 
